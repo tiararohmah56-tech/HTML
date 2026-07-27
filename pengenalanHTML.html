@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belajar HTML Interaktif</title>
+    <!-- Menggunakan Tailwind CSS untuk styling yang cepat dan responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Menggunakan Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Mengatur font utama ke Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Warna latar belakang abu-abu terang */
+        }
+        /* Custom scrollbar untuk tampilan yang lebih bersih */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+        /* Editor kode dan gaya pratinjau */
+        .code-editor, .preview-container {
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .header-bar {
+            background-color: #1f2937; /* Abu-abu gelap untuk header */
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        textarea.editor-textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace; /* Font monospace untuk kode */
+            font-size: 0.95rem;
+            border: none;
+            resize: none;
+            background-color: #1e1e1e; /* Tema gelap untuk editor */
+            color: #d4d4d4;
+            outline: none;
+        }
+        /* Penyorotan sintaks (Sangat mendasar untuk tampilan saja) */
+        textarea.editor-textarea:focus {
+             box-shadow: inset 0 0 0 2px #3b82f6; /* Fokus biru */
+        }
+        
+        .preview-iframe-container {
+            flex-grow: 1;
+            padding: 1rem;
+            background-color: white;
+            min-height: 200px;
+            overflow: auto;
+        }
+        /* Animasi transisi yang halus */
+        .lesson-card {
+            transition: all 0.3s ease;
+        }
+        .lesson-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Menyembunyikan elemen secara default */
+        .hidden-lesson {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-blue-600 text-white shadow-md z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-brands fa-html5 text-3xl text-orange-400"></i>
+                <h1 class="text-2xl font-bold">HTML MasterClass</h1>
+            </div>
+            <nav class="hidden md:flex space-x-4">
+                <button onclick="showHome()" class="hover:bg-blue-700 px-3 py-2 rounded transition font-medium">Beranda</button>
+                <button onclick="startLesson(0)" class="hover:bg-blue-700 px-3 py-2 rounded transition font-medium">Mulai Belajar</button>
+            </nav>
+            <!-- Tombol Menu Mobile -->
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="flex-grow overflow-auto flex flex-col" id="main-content">
+        <!-- Bagian Beranda: Menampilkan daftar materi -->
+        <div id="home-view" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Pelajari Dasar-Dasar Web</h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Selamat datang di media pembelajaran interaktif HTML. Pelajari konsep, coba langsung kodenya, dan lihat hasilnya seketika!</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="lesson-grid">
+                <!-- Kartu Pelajaran akan dirender di sini oleh JavaScript -->
+            </div>
+        </div>
+
+        <!-- Bagian Pembelajaran: Menampilkan materi spesifik dan editor interaktif -->
+        <div id="lesson-view" class="hidden-lesson flex-grow flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+            <!-- Navigasi Pelajaran -->
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showHome()" class="text-blue-600 hover:text-blue-800 font-medium flex items-center transition">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Daftar
+                </button>
+                <div class="text-sm font-semibold text-gray-500 bg-gray-200 px-3 py-1 rounded-full" id="lesson-progress">
+                    Materi 1 dari 5
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-grow">
+                <!-- Kolom Kiri: Teori dan Instruksi -->
+                <div class="flex flex-col space-y-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-blue-500">
+                        <h2 class="text-3xl font-bold mb-2 text-gray-800" id="lesson-title">Judul Materi</h2>
+                        <div class="text-gray-600 leading-relaxed space-y-4" id="lesson-content">
+                            <!-- Konten materi akan dimuat di sini -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-xl p-5 border border-yellow-200">
+                        <h3 class="text-lg font-bold text-yellow-800 mb-2 flex items-center">
+                            <i class="fa-solid fa-lightbulb mr-2 text-yellow-500"></i> Tugas Anda
+                        </h3>
+                        <p class="text-yellow-900" id="lesson-task">Deskripsi tugas akan muncul di sini.</p>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Area Interaktif (Editor & Preview) -->
+                <div class="flex flex-col space-y-4 h-full min-h-[600px]">
+                    <!-- Editor Kode -->
+                    <div class="code-editor flex-1 flex flex-col h-1/2 shadow-lg">
+                        <div class="header-bar">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-code text-blue-400"></i>
+                                <span>Editor Kode HTML</span>
+                            </div>
+                            <button onclick="runCode()" class="bg-green-500 hover:bg-green-600 text-white text-sm px-4 py-1.5 rounded transition flex items-center shadow">
+                                <i class="fa-solid fa-play mr-2"></i> Jalankan
+                            </button>
+                        </div>
+                        <textarea id="html-editor" class="editor-textarea" spellcheck="false" placeholder="Tulis kode HTML Anda di sini..."></textarea>
+                    </div>
+
+                    <!-- Pratinjau Hasil -->
+                    <div class="preview-container flex-1 flex flex-col h-1/2 shadow-lg">
+                        <div class="header-bar bg-gray-100 !text-gray-800 border-b border-gray-200">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-eye text-green-600"></i>
+                                <span>Hasil Tampilan (Browser)</span>
+                            </div>
+                        </div>
+                        <!-- Menggunakan div biasa alih-alih iframe untuk kemudahan eksekusi JS sederhana dalam satu halaman, 
+                             namun kita akan mengisinya menggunakan innerHTML agar mirip perilaku browser -->
+                        <div id="preview-frame" class="preview-iframe-container">
+                            <!-- Hasil render HTML akan muncul di sini -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigasi Bawah -->
+            <div class="mt-8 flex justify-between items-center border-t border-gray-200 pt-6">
+                <button id="btn-prev" onclick="prevLesson()" class="px-6 py-2 border-2 border-blue-600 text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Sebelumnya
+                </button>
+                <button id="btn-next" onclick="nextLesson()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                    Selanjutnya <i class="fa-solid fa-chevron-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-4 text-center text-sm z-10">
+        <p>&copy; 2026 Media Pembelajaran Interaktif HTML. Dibuat untuk tujuan pendidikan.</p>
+    </footer>
+
+    <script>
+        // Data struktur kurikulum pelajaran
+        const lessons = [
+            {
+                id: 1,
+                title: "1. Pengenalan HTML & Struktur Dasar",
+                icon: "fa-solid fa-building",
+                color: "text-blue-500",
+                bg: "bg-blue-50",
+                description: "Pelajari apa itu HTML dan struktur dasar yang wajib ada dalam sebuah dokumen web.",
+                content: `
+                    <p><strong>HTML (HyperText Markup Language)</strong> adalah bahasa standar untuk membuat halaman web. HTML menggunakan <strong>'tag'</strong> untuk memberitahu browser bagaimana menampilkan konten.</p>
+                    <p>Sebuah dokumen HTML memiliki struktur kerangka yang standar. Berikut adalah elemen wajibnya:</p>
+                    <ul class="list-disc pl-5 space-y-2 mt-2">
+                        <li><code>&lt;!DOCTYPE html&gt;</code>: Mendeklarasikan bahwa ini adalah dokumen HTML5.</li>
+                        <li><code>&lt;html&gt;</code>: Elemen akar (root) yang membungkus seluruh isi halaman.</li>
+                        <li><code>&lt;head&gt;</code>: Berisi informasi meta tentang dokumen (seperti judul di tab browser).</li>
+                        <li><code>&lt;body&gt;</code>: Tempat di mana semua konten yang terlihat oleh pengguna (teks, gambar, tombol) diletakkan.</li>
+                    </ul>
+                `,
+                task: "Di editor kode, cobalah ubah teks 'Halo, Dunia!' di dalam tag &lt;body&gt; menjadi 'Halo, Nama Anda!'. Lalu klik 'Jalankan'.",
+                initialCode: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Halaman Pertamaku</title>
+</head>
+<body>
+    
+    Halo, Dunia!
+    
+</body>
+</html>`
+            },
+            {
+                id: 2,
+                title: "2. Membuat Judul (Heading)",
+                icon: "fa-solid fa-heading",
+                color: "text-purple-500",
+                bg: "bg-purple-50",
+                description: "Cara membuat berbagai tingkat judul untuk menstrukturkan teks Anda.",
+                content: `
+                    <p>Dalam HTML, judul atau heading digunakan untuk memberikan struktur dan hierarki pada konten teks.</p>
+                    <p>Terdapat 6 tingkat heading, mulai dari <code>&lt;h1&gt;</code> (paling penting/besar) hingga <code>&lt;h6&gt;</code> (paling tidak penting/kecil).</p>
+                    <p>Aturan penting:</p>
+                    <ul class="list-disc pl-5 space-y-2 mt-2">
+                        <li>Gunakan <code>&lt;h1&gt;</code> hanya satu kali per halaman untuk judul utama.</li>
+                        <li>Jangan gunakan heading hanya untuk membuat teks menjadi tebal atau besar, gunakanlah untuk struktur dokumen.</li>
+                    </ul>
+                `,
+                task: "Tambahkan tag &lt;h1&gt; dengan teks 'Biodata Saya' dan tag &lt;h2&gt; dengan teks 'Informasi Pribadi' di dalam tag &lt;body&gt;.",
+                initialCode: `<!DOCTYPE html>
+<html>
+<body>
+
+    <!-- Tambahkan kode Anda di bawah ini -->
+    
+    
+</body>
+</html>`
+            },
+            {
+                id: 3,
+                title: "3. Paragraf dan Pemformatan Teks",
+                icon: "fa-solid fa-paragraph",
+                color: "text-green-500",
+                bg: "bg-green-50",
+                description: "Menulis teks dalam paragraf dan memberikan gaya dasar (tebal, miring).",
+                content: `
+                    <p>Untuk membuat paragraf biasa, kita menggunakan tag <code>&lt;p&gt;</code>. Browser akan secara otomatis menambahkan ruang (margin) sebelum dan sesudah paragraf.</p>
+                    <p>Kita juga bisa memformat teks di dalam paragraf menggunakan tag khusus:</p>
+                    <ul class="list-disc pl-5 space-y-2 mt-2">
+                        <li><code>&lt;b&gt;</code> atau <code>&lt;strong&gt;</code>: Membuat teks menjadi <strong>tebal</strong>. (Disarankan menggunakan 'strong' karena memiliki makna semantik 'penting').</li>
+                        <li><code>&lt;i&gt;</code> atau <code>&lt;em&gt;</code>: Membuat teks menjadi <em>miring</em>.</li>
+                        <li><code>&lt;u&gt;</code>: Menambahkan <u>garis bawah</u> pada teks.</li>
+                        <li><code>&lt;br&gt;</code>: Membuat baris baru (line break) tanpa memulai paragraf baru. Tag ini tidak memiliki tag penutup.</li>
+                    </ul>
+                `,
+                task: "Buat sebuah paragraf menggunakan tag &lt;p&gt;. Di dalamnya, tuliskan sebuah kalimat dan buat satu kata menjadi tebal dan satu kata menjadi miring.",
+                initialCode: `<!DOCTYPE html>
+<html>
+<body>
+    
+    <h2>Cerita Pendek</h2>
+    <!-- Tulis paragraf Anda di sini -->
+    
+</body>
+</html>`
+            },
+            {
+                id: 4,
+                title: "4. Menyisipkan Gambar",
+                icon: "fa-solid fa-image",
+                color: "text-red-500",
+                bg: "bg-red-50",
+                description: "Menambahkan elemen visual menggunakan tag image.",
+                content: `
+                    <p>Gambar membuat halaman web lebih menarik. HTML menggunakan tag <code>&lt;img&gt;</code> untuk menyisipkan gambar.</p>
+                    <p>Tag <code>&lt;img&gt;</code> adalah tag 'kosong', artinya ia tidak memiliki tag penutup, melainkan menggunakan <strong>atribut</strong>.</p>
+                    <p>Atribut penting untuk gambar:</p>
+                    <ul class="list-disc pl-5 space-y-2 mt-2">
+                        <li><code>src="..."</code> (source): Menentukan sumber atau alamat URL (link) gambar tersebut berada. Ini WAJIB ada.</li>
+                        <li><code>alt="..."</code> (alternative text): Teks pengganti jika gambar gagal dimuat. Sangat penting untuk aksesibilitas (pembaca layar).</li>
+                        <li><code>width="..."</code> dan <code>height="..."</code>: Mengatur ukuran gambar dalam pixel.</li>
+                    </ul>
+                `,
+                task: "Tambahkan sebuah gambar menggunakan tag &lt;img&gt;. Gunakan URL ini untuk atribut src: 'https://placehold.co/400x200/e0f2fe/0369a1?text=Gambar+Pemandangan'. Jangan lupa atribut alt!",
+                initialCode: `<!DOCTYPE html>
+<html>
+<body>
+    
+    <h2>Galeri Liburan</h2>
+    <p>Berikut adalah foto yang saya ambil:</p>
+    
+    <!-- Masukkan tag gambar di bawah ini -->
+    
+    
+</body>
+</html>`
+            },
+            {
+                id: 5,
+                title: "5. Membuat Tautan (Hyperlink)",
+                icon: "fa-solid fa-link",
+                color: "text-indigo-500",
+                bg: "bg-indigo-50",
+                description: "Menghubungkan halaman web satu dengan yang lainnya.",
+                content: `
+                    <p>Tautan atau link adalah inti dari 'HyperText'. Tautan memungkinkan pengguna mengklik teks atau gambar untuk berpindah ke halaman lain.</p>
+                    <p>Kita menggunakan tag <strong>anchor</strong> atau <code>&lt;a&gt;</code> untuk membuat tautan.</p>
+                    <p>Atribut terpentingnya adalah:</p>
+                    <ul class="list-disc pl-5 space-y-2 mt-2">
+                        <li><code>href="..."</code> (Hypertext REFerence): Menentukan alamat URL tujuan ketika link diklik.</li>
+                        <li><code>target="_blank"</code>: (Opsional) Membuat tautan terbuka di tab atau jendela browser baru.</li>
+                    </ul>
+                    <p>Contoh: <code>&lt;a href="https://google.com"&gt;Buka Google&lt;/a&gt;</code></p>
+                `,
+                task: "Buatlah sebuah tautan menggunakan tag &lt;a&gt;. Buat teksnya 'Kunjungi Wikipedia' dan arahkan (href) ke 'https://id.wikipedia.org'.",
+                initialCode: `<!DOCTYPE html>
+<html>
+<body>
+    
+    <h2>Sumber Informasi</h2>
+    <p>Untuk belajar lebih banyak, Anda bisa mengunjungi situs ini:</p>
+    
+    <!-- Buat tautan Anda di bawah ini -->
+    
+    
+</body>
+</html>`
+            }
+        ];
+
+        // Variabel state aplikasi
+        let currentLessonIndex = 0;
+
+        // Fungsi untuk merender daftar pelajaran di halaman Beranda
+        function renderHome() {
+            const grid = document.getElementById('lesson-grid');
+            grid.innerHTML = ''; // Kosongkan grid
+
+            lessons.forEach((lesson, index) => {
+                const card = document.createElement('div');
+                card.className = `lesson-card bg-white rounded-xl shadow p-6 border-t-4 border-transparent hover:border-blue-500 cursor-pointer flex flex-col h-full`;
+                card.onclick = () => startLesson(index);
+
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full ${lesson.bg} ${lesson.color} flex items-center justify-center text-xl mr-4">
+                            <i class="${lesson.icon}"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">${lesson.title.split('. ')[1]}</h3>
+                    </div>
+                    <p class="text-gray-600 flex-grow">${lesson.description}</p>
+                    <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm font-semibold text-blue-600">
+                        <span>Pelajaran ${index + 1}</span>
+                        <span>Mulai <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Fungsi untuk menampilkan Beranda
+        function showHome() {
+            document.getElementById('home-view').classList.remove('hidden-lesson');
+            document.getElementById('lesson-view').classList.add('hidden-lesson');
+        }
+
+        // Fungsi untuk memulai pelajaran tertentu
+        function startLesson(index) {
+            currentLessonIndex = index;
+            document.getElementById('home-view').classList.add('hidden-lesson');
+            document.getElementById('lesson-view').classList.remove('hidden-lesson');
+            
+            loadLessonData();
+        }
+
+        // Fungsi untuk memuat data pelajaran ke antarmuka
+        function loadLessonData() {
+            const lesson = lessons[currentLessonIndex];
+            
+            // Perbarui teks dan konten
+            document.getElementById('lesson-title').innerText = lesson.title;
+            document.getElementById('lesson-content').innerHTML = lesson.content;
+            document.getElementById('lesson-task').innerHTML = lesson.task;
+            document.getElementById('lesson-progress').innerText = `Materi ${currentLessonIndex + 1} dari ${lessons.length}`;
+            
+            // Set kode awal ke editor
+            const editor = document.getElementById('html-editor');
+            editor.value = lesson.initialCode;
+            
+            // Eksekusi kode awal agar preview langsung muncul
+            runCode();
+            
+            // Perbarui status tombol navigasi
+            document.getElementById('btn-prev').disabled = currentLessonIndex === 0;
+            
+            const btnNext = document.getElementById('btn-next');
+            if (currentLessonIndex === lessons.length - 1) {
+                btnNext.innerHTML = 'Selesai <i class="fa-solid fa-check ml-2"></i>';
+                btnNext.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                btnNext.classList.add('bg-green-600', 'hover:bg-green-700');
+                btnNext.onclick = showHome; // Kembali ke home jika selesai
+            } else {
+                btnNext.innerHTML = 'Selanjutnya <i class="fa-solid fa-chevron-right ml-2"></i>';
+                btnNext.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                btnNext.classList.remove('bg-green-600', 'hover:bg-green-700');
+                btnNext.onclick = nextLesson;
+            }
+            
+            // Scroll ke atas
+            document.getElementById('main-content').scrollTop = 0;
+        }
+
+        function nextLesson() {
+            if (currentLessonIndex < lessons.length - 1) {
+                currentLessonIndex++;
+                loadLessonData();
+            }
+        }
+
+        function prevLesson() {
+            if (currentLessonIndex > 0) {
+                currentLessonIndex--;
+                loadLessonData();
+            }
+        }
+
+        // Fungsi inti untuk mengambil kode dari textarea dan merendernya di div preview
+        function runCode() {
+            const code = document.getElementById('html-editor').value;
+            const previewFrame = document.getElementById('preview-frame');
+            
+            // Membersihkan frame pratinjau
+            previewFrame.innerHTML = '';
+            
+            // Karena kita menggunakan div biasa untuk preview, kita perlu menangani tag 'body' dan isi lainnya
+            // Pendekatan ini aman untuk HTML dasar, namun untuk HTML kompleks (dengan script) iframe lebih baik.
+            // Untuk kebutuhan media pembelajaran HTML dasar ini, innerHTML ke div cukup memadai dan aman (tidak ada XSS kompleks dari siswa sendiri).
+            
+            // Mencoba mengekstrak konten di dalam tag <body> jika ada
+            const bodyContentMatch = code.match(/<body[^>]*>([\w\W]*?)<\/body>/i);
+            
+            let contentToRender = code; // Default render semua
+            
+            if (bodyContentMatch && bodyContentMatch[1]) {
+                // Jika ada tag body, ambil isinya saja agar tidak merusak struktur halaman utama kita
+                contentToRender = bodyContentMatch[1];
+            } else {
+                // Jika tidak ada tag body (mungkin siswa menghapusnya), kita saring tag html dan head
+                contentToRender = code.replace(/<html[^>]*>|<\/html>|<head[^>]*>([\w\W]*?)<\/head>/gi, '');
+            }
+
+            // Menyisipkan konten ke dalam area pratinjau
+            try {
+                previewFrame.innerHTML = contentToRender;
+                
+                // Sedikit trik agar link yang diklik di preview terbuka di tab baru, bukan mengganti aplikasi kita
+                const links = previewFrame.querySelectorAll('a');
+                links.forEach(link => {
+                    link.setAttribute('target', '_blank');
+                });
+                
+            } catch (error) {
+                previewFrame.innerHTML = `<p style="color:red; font-family:sans-serif;">Error rendering HTML: ${error.message}</p>`;
+            }
+        }
+
+        // Menjalankan kode setiap kali user mengetik (Real-time preview)
+        document.getElementById('html-editor').addEventListener('input', () => {
+            // Kita bisa menambahkan debounce (jeda) di sini jika performa menurun
+            runCode();
+        });
+        
+        // Memungkinkan penggunaan tombol 'Tab' di textarea alih-alih pindah elemen
+        document.getElementById('html-editor').addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+
+                // Sisipkan spasi atau karakter tab
+                this.value = this.value.substring(0, start) +
+                    "    " + this.value.substring(end);
+
+                // Kembalikan kursor ke posisi yang tepat
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+
+        // Inisialisasi saat halaman dimuat
+        window.onload = () => {
+            renderHome();
+        };
+
+    </script>
+</body>
+</html>
