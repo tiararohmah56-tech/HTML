@@ -100,6 +100,7 @@
             <nav class="hidden md:flex space-x-4">
                 <button onclick="showHome()" class="hover:bg-blue-700 px-3 py-2 rounded transition font-medium">Beranda</button>
                 <button onclick="startLesson(0)" class="hover:bg-blue-700 px-3 py-2 rounded transition font-medium">Mulai Belajar</button>
+                <button onclick="startQuiz()" class="hover:bg-blue-700 px-3 py-2 rounded transition font-medium bg-yellow-500 text-blue-900 hover:text-white">Latihan Soal</button>
             </nav>
             <!-- Tombol Menu Mobile -->
             <button class="md:hidden text-white focus:outline-none">
@@ -193,6 +194,46 @@
                 <button id="btn-next" onclick="nextLesson()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
                     Selanjutnya <i class="fa-solid fa-chevron-right ml-2"></i>
                 </button>
+            </div>
+        </div>
+
+        <!-- Bagian Latihan Soal (Kuis) -->
+        <div id="quiz-view" class="hidden-lesson flex-grow flex flex-col max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <div class="bg-white rounded-xl shadow-lg p-8 border-t-4 border-yellow-500">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h2 class="text-3xl font-bold text-gray-800"><i class="fa-solid fa-clipboard-question text-yellow-500 mr-3"></i>Latihan Soal HTML</h2>
+                    <span id="quiz-progress" class="text-sm font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">Soal 1 dari 5</span>
+                </div>
+
+                <!-- Container Pertanyaan -->
+                <div id="question-container" class="mb-8">
+                    <p id="question-text" class="text-xl font-semibold text-gray-700 mb-6"></p>
+                    <div id="options-container" class="space-y-3">
+                        <!-- Opsi jawaban akan dirender di sini -->
+                    </div>
+                </div>
+
+                <!-- Area Hasil Kuis -->
+                <div id="quiz-result" class="hidden flex-col items-center justify-center py-8 text-center">
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-trophy text-5xl text-yellow-500"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-gray-800 mb-2">Selesai!</h3>
+                    <p class="text-xl text-gray-600 mb-6">Skor Anda: <span id="final-score" class="font-bold text-blue-600 text-2xl">0/5</span></p>
+                    
+                    <div class="flex space-x-4">
+                        <button onclick="startQuiz()" class="px-6 py-2 border-2 border-blue-600 text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition">Ulangi Kuis</button>
+                        <button onclick="showHome()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition">Kembali ke Beranda</button>
+                    </div>
+                </div>
+
+                <!-- Navigasi Kuis -->
+                <div id="quiz-navigation" class="flex justify-between items-center border-t border-gray-200 pt-6">
+                    <button onclick="showHome()" class="text-gray-500 hover:text-gray-700 font-medium">Batal</button>
+                    <button id="btn-next-question" onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Soal Selanjutnya <i class="fa-solid fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -353,8 +394,65 @@
             }
         ];
 
+        // Data soal kuis
+        const quizQuestions = [
+            {
+                question: "Kepanjangan dari HTML adalah...",
+                options: [
+                    "HyperText Markup Language",
+                    "HighText Machine Language",
+                    "HyperText and links Markup Language",
+                    "Hyper Tool Multi Language"
+                ],
+                correctAnswer: 0
+            },
+            {
+                question: "Tag mana yang digunakan untuk membuat judul paling besar dalam HTML?",
+                options: [
+                    "&lt;heading&gt;",
+                    "&lt;h6&gt;",
+                    "&lt;h1&gt;",
+                    "&lt;head&gt;"
+                ],
+                correctAnswer: 2
+            },
+            {
+                question: "Atribut apa yang wajib ada di dalam tag &lt;img&gt; untuk menampilkan gambar?",
+                options: [
+                    "href",
+                    "src",
+                    "alt",
+                    "link"
+                ],
+                correctAnswer: 1
+            },
+            {
+                question: "Bagaimana cara membuat teks menjadi miring?",
+                options: [
+                    "&lt;miring&gt;",
+                    "&lt;b&gt;",
+                    "&lt;italic&gt;",
+                    "&lt;i&gt;"
+                ],
+                correctAnswer: 3
+            },
+            {
+                question: "Untuk membuat tautan (hyperlink), tag apa yang digunakan?",
+                options: [
+                    "&lt;link&gt;",
+                    "&lt;a&gt;",
+                    "&lt;href&gt;",
+                    "&lt;url&gt;"
+                ],
+                correctAnswer: 1
+            }
+        ];
+
         // Variabel state aplikasi
         let currentLessonIndex = 0;
+        let currentQuestionIndex = 0;
+        let userScore = 0;
+        let selectedOption = null;
 
         // Fungsi untuk merender daftar pelajaran di halaman Beranda
         function renderHome() {
@@ -387,6 +485,7 @@
         function showHome() {
             document.getElementById('home-view').classList.remove('hidden-lesson');
             document.getElementById('lesson-view').classList.add('hidden-lesson');
+            document.getElementById('quiz-view').classList.add('hidden-lesson'); // Sembunyikan view kuis
         }
 
         // Fungsi untuk memulai pelajaran tertentu
@@ -420,14 +519,14 @@
             
             const btnNext = document.getElementById('btn-next');
             if (currentLessonIndex === lessons.length - 1) {
-                btnNext.innerHTML = 'Selesai <i class="fa-solid fa-check ml-2"></i>';
+                btnNext.innerHTML = 'Latihan Soal <i class="fa-solid fa-pencil ml-2"></i>';
                 btnNext.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                btnNext.classList.add('bg-green-600', 'hover:bg-green-700');
-                btnNext.onclick = showHome; // Kembali ke home jika selesai
+                btnNext.classList.add('bg-yellow-500', 'hover:bg-yellow-600', 'text-blue-900');
+                btnNext.onclick = startQuiz; // Mengarah ke kuis jika materi selesai
             } else {
                 btnNext.innerHTML = 'Selanjutnya <i class="fa-solid fa-chevron-right ml-2"></i>';
                 btnNext.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                btnNext.classList.remove('bg-green-600', 'hover:bg-green-700');
+                btnNext.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-blue-900', 'bg-green-600');
                 btnNext.onclick = nextLesson;
             }
             
@@ -448,6 +547,119 @@
                 loadLessonData();
             }
         }
+
+        // --- LOGIKA KUIS ---
+
+        function startQuiz() {
+            // Reset state kuis
+            currentQuestionIndex = 0;
+            userScore = 0;
+            
+            // Atur tampilan antarmuka
+            document.getElementById('home-view').classList.add('hidden-lesson');
+            document.getElementById('lesson-view').classList.add('hidden-lesson');
+            document.getElementById('quiz-view').classList.remove('hidden-lesson');
+            
+            document.getElementById('question-container').classList.remove('hidden');
+            document.getElementById('quiz-navigation').classList.remove('hidden');
+            document.getElementById('quiz-result').classList.add('hidden', 'flex'); // flex harus dihapus agar benar-benar tersembunyi
+            document.getElementById('quiz-result').style.display = 'none'; // Pastikan tersembunyi
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            selectedOption = null;
+            document.getElementById('btn-next-question').disabled = true;
+            
+            const questionData = quizQuestions[currentQuestionIndex];
+            
+            document.getElementById('quiz-progress').innerText = `Soal ${currentQuestionIndex + 1} dari ${quizQuestions.length}`;
+            document.getElementById('question-text').innerHTML = `${currentQuestionIndex + 1}. ${questionData.question}`;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            questionData.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition duration-200 focus:outline-none quiz-option';
+                button.innerHTML = `<span class="inline-block w-8 h-8 rounded-full bg-gray-200 text-gray-700 text-center leading-8 mr-3 font-bold">${String.fromCharCode(65 + index)}</span> ${option}`;
+                
+                button.onclick = () => selectOption(index, button);
+                
+                optionsContainer.appendChild(button);
+            });
+            
+            const btnNext = document.getElementById('btn-next-question');
+            if (currentQuestionIndex === quizQuestions.length - 1) {
+                btnNext.innerHTML = 'Lihat Hasil <i class="fa-solid fa-check-circle ml-2"></i>';
+                btnNext.classList.replace('bg-blue-600', 'bg-green-600');
+                btnNext.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+            } else {
+                btnNext.innerHTML = 'Soal Selanjutnya <i class="fa-solid fa-chevron-right ml-2"></i>';
+                btnNext.classList.replace('bg-green-600', 'bg-blue-600');
+                btnNext.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+            }
+        }
+
+        function selectOption(index, buttonElement) {
+            selectedOption = index;
+            
+            // Reset gaya semua opsi
+            const allOptions = document.querySelectorAll('.quiz-option');
+            allOptions.forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-300');
+                btn.classList.add('border-gray-200');
+            });
+            
+            // Terapkan gaya ke opsi terpilih
+            buttonElement.classList.remove('border-gray-200');
+            buttonElement.classList.add('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-300');
+            
+            // Aktifkan tombol selanjutnya
+            document.getElementById('btn-next-question').disabled = false;
+        }
+
+        function nextQuestion() {
+            // Cek jawaban
+            if (selectedOption === quizQuestions[currentQuestionIndex].correctAnswer) {
+                userScore++;
+            }
+            
+            if (currentQuestionIndex < quizQuestions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showQuizResult();
+            }
+        }
+
+        function showQuizResult() {
+            document.getElementById('question-container').classList.add('hidden');
+            document.getElementById('quiz-navigation').classList.add('hidden');
+            
+            const resultDiv = document.getElementById('quiz-result');
+            resultDiv.classList.remove('hidden');
+            resultDiv.style.display = 'flex'; // Gunakan flex untuk pusatkan konten
+            
+            document.getElementById('final-score').innerText = `${userScore}/${quizQuestions.length}`;
+            
+            // Ubah ikon/warna berdasarkan skor
+            const iconDiv = resultDiv.querySelector('div');
+            const icon = iconDiv.querySelector('i');
+            
+            if (userScore === quizQuestions.length) {
+                iconDiv.className = 'w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-4';
+                icon.className = 'fa-solid fa-trophy text-5xl text-yellow-500';
+            } else if (userScore >= quizQuestions.length / 2) {
+                iconDiv.className = 'w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-4';
+                icon.className = 'fa-solid fa-thumbs-up text-5xl text-blue-500';
+            } else {
+                iconDiv.className = 'w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-4';
+                icon.className = 'fa-solid fa-book text-5xl text-red-500';
+            }
+        }
+
 
         // Fungsi inti untuk mengambil kode dari textarea dan merendernya di div preview
         function runCode() {
